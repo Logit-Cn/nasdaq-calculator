@@ -7,10 +7,10 @@
 <style>
 :root{--bg:#faf9f6;--text:#2c3e50;--accent:#1a3c5e;--green:#27ae60;--gold:#b8860b;--red:#c0392b;--muted:#7f8c8d}
 *{box-sizing:border-box}
-body{font-family:"Noto Serif SC","PingFang SC",sans-serif;background:var(--bg);color:var(--text);line-height:1.7;padding:24px;max-width:720px;margin:0 auto}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;background:var(--bg);color:var(--text);line-height:1.7;padding:24px;max-width:720px;margin:0 auto}
 h1{font-size:1.2em;color:var(--accent);margin:0 0 4px}
 h2{font-size:0.95em;color:var(--accent);margin:28px 0 10px}
-.sub{font-size:0.8em;color:var(--muted);margin:0 0 20px}
+.sub{font-size:0.8em;color:var(--muted);margin:0 0 20px;padding:0 4px}
 .card{background:#fff;border-radius:10px;padding:20px 24px;margin:14px 0;box-shadow:0 1px 6px rgba(0,0,0,0.04)}
 .controls{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin:12px 0}
 .control-group{flex:1;min-width:120px}
@@ -59,7 +59,7 @@ tr.highlight td{background:#eaf2f8;font-weight:700}
 .compare-box.nasdaq .cp-value{color:var(--green)}
 
 .footer{font-size:0.65em;color:var(--muted);text-align:center;margin-top:24px}
-@media(max-width:600px){.scenarios{grid-template-columns:1fr}.controls{flex-direction:column}.compare{grid-template-columns:1fr}}
+@media(max-width:600px){body{padding:16px}.card{padding:14px 16px}.scenarios{grid-template-columns:1fr}.controls{flex-direction:column}.compare{grid-template-columns:1fr}.presets{gap:4px}.preset{font-size:0.68em;padding:3px 10px}}
 </style>
 </head>
 <body>

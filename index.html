@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>纳指定投收益计算器</title>
+<style>
+:root{--bg:#faf9f6;--text:#2c3e50;--accent:#1a3c5e;--green:#27ae60;--gold:#b8860b;--red:#c0392b;--muted:#7f8c8d}
+*{box-sizing:border-box}
+body{font-family:"Noto Serif SC","PingFang SC",sans-serif;background:var(--bg);color:var(--text);line-height:1.7;padding:24px;max-width:720px;margin:0 auto}
+h1{font-size:1.2em;color:var(--accent);margin:0 0 4px}
+h2{font-size:0.95em;color:var(--accent);margin:28px 0 10px}
+.sub{font-size:0.8em;color:var(--muted);margin:0 0 20px}
+.card{background:#fff;border-radius:10px;padding:20px 24px;margin:14px 0;box-shadow:0 1px 6px rgba(0,0,0,0.04)}
+.controls{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin:12px 0}
+.control-group{flex:1;min-width:120px}
+.control-group label{display:block;font-size:0.75em;color:var(--muted);margin:0 0 4px;font-weight:600}
+.control-group input[type=range]{width:100%;accent-color:var(--accent)}
+.control-group .val{font-size:1.3em;font-weight:700;color:var(--accent)}
+.presets{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+.preset{font-size:0.72em;padding:4px 12px;border-radius:14px;border:1px solid #ddd;background:#fff;cursor:pointer;transition:all 0.15s}
+.preset:hover{border-color:var(--accent);background:#eaf2f8}
+.preset.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.scenarios{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.scenario{background:#fff;border-radius:8px;padding:14px 16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
+.scenario .sc-label{font-size:0.7em;color:var(--muted);margin:0 0 4px}
+.scenario .sc-rate{font-size:0.8em;font-weight:700;margin:0 0 6px}
+.scenario .sc-value{font-size:1.5em;font-weight:800;margin:4px 0}
+.scenario .sc-detail{font-size:0.7em;color:var(--muted)}
+.scenario.pessimistic .sc-rate{color:var(--red)}
+.scenario.neutral .sc-rate{color:var(--accent)}
+.scenario.optimistic .sc-rate{color:var(--green)}
+.scenario.pessimistic .sc-value{color:var(--red)}
+.scenario.neutral .sc-value{color:var(--accent)}
+.scenario.optimistic .sc-value{color:var(--green)}
+
+table{width:100%;border-collapse:collapse;font-size:0.82em;margin:16px 0;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
+th{background:var(--accent);color:#fff;padding:8px 10px;text-align:center;font-size:0.75em}
+td{padding:7px 10px;text-align:center;border-bottom:1px solid #eee;font-size:0.82em}
+td:first-child{text-align:left;font-weight:600}
+tr:last-child td{border-bottom:none}
+tr.highlight td{background:#eaf2f8;font-weight:700}
+
+.chart-bar-wrap{display:flex;align-items:center;gap:8px;margin:4px 0}
+.chart-bar-label{width:70px;font-size:0.72em;text-align:right;color:var(--muted);flex-shrink:0}
+.chart-bar-track{flex:1;height:22px;background:#eee;border-radius:11px;overflow:hidden;position:relative}
+.chart-bar-fill{height:100%;border-radius:11px;transition:width 0.4s;min-width:2px}
+.chart-bar-fill.pess{background:var(--red);opacity:0.7}
+.chart-bar-fill.neut{background:var(--accent)}
+.chart-bar-fill.opti{background:var(--green)}
+.chart-bar-val{width:85px;font-size:0.72em;font-weight:600;text-align:left;flex-shrink:0}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.compare-box{background:#fff;border-radius:8px;padding:14px 16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
+.compare-box .cp-label{font-size:0.72em;color:var(--muted);margin:0 0 4px}
+.compare-box .cp-value{font-size:1.3em;font-weight:800;margin:4px 0}
+.compare-box.fixed .cp-value{color:var(--red)}
+.compare-box.nasdaq .cp-value{color:var(--green)}
+
+.footer{font-size:0.65em;color:var(--muted);text-align:center;margin-top:24px}
+@media(max-width:600px){.scenarios{grid-template-columns:1fr}.controls{flex-direction:column}.compare{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<h1>纳指定投收益计算器</h1>
+<p class="sub">输入你每月打算投的金额，看 5 年、10 年、15 年、20 年后，这笔钱在悲观/中性/乐观三种情景下分别能变成多少。</p>
+
+<div class="card">
+  <div class="controls">
+    <div class="control-group" style="flex:2">
+      <label>每月定投金额</label>
+      <div class="val" id="monthlyDisplay">¥1,000</div>
+      <input type="range" id="monthly" min="500" max="10000" step="100" value="1000">
+      <div style="display:flex;justify-content:space-between;font-size:0.68em;color:var(--muted)"><span>¥500</span><span>¥10,000</span></div>
+    </div>
+    <div class="control-group" style="flex:1">
+      <label>投资年限</label>
+      <div class="val" id="yearsDisplay">10 年</div>
+      <input type="range" id="years" min="5" max="30" step="1" value="10">
+      <div style="display:flex;justify-content:space-between;font-size:0.68em;color:var(--muted)"><span>5年</span><span>30年</span></div>
+    </div>
+  </div>
+
+  <div class="presets">
+    <span style="font-size:0.7em;color:var(--muted);line-height:2;margin-right:4px">快速设定</span>
+    <button class="preset active" data-monthly="1000" data-years="10">月1K·10年</button>
+    <button class="preset" data-monthly="2000" data-years="10">月2K·10年</button>
+    <button class="preset" data-monthly="1000" data-years="20">月1K·20年</button>
+    <button class="preset" data-monthly="3000" data-years="20">月3K·20年</button>
+    <button class="preset" data-monthly="5000" data-years="15">月5K·15年</button>
+  </div>
+</div>
+
+<div class="scenarios" id="scenarios">
+  <div class="scenario pessimistic">
+    <div class="sc-label">📉 悲观情景</div>
+    <div class="sc-rate">年化 5%</div>
+    <div class="sc-value" id="pessVal">—</div>
+    <div class="sc-detail">历史上最差的20年期<br>纳指也有 ~6%</div>
+  </div>
+  <div class="scenario neutral">
+    <div class="sc-label">📊 中性情景</div>
+    <div class="sc-rate">年化 8%</div>
+    <div class="sc-value" id="neutVal">—</div>
+    <div class="sc-detail">1985年至今均值<br>最有可能发生的情况</div>
+  </div>
+  <div class="scenario optimistic">
+    <div class="sc-label">📈 乐观情景</div>
+    <div class="sc-rate">年化 13%</div>
+    <div class="sc-value" id="optiVal">—</div>
+    <div class="sc-detail">近10年实际年化区间<br>科技持续突破的红利</div>
+  </div>
+</div>
+
+<div class="card" id="breakdown" style="text-align:center;font-size:0.95em;line-height:2.2">
+  <p style="margin:0;color:var(--muted)">这笔钱是怎么来的</p>
+  <p style="margin:4px 0;font-size:0.85em;">你自己存进去的 <strong id="principalDisplay">—</strong> + 全球科技公司帮你赚的 <strong style="color:var(--green)" id="marketGift">—</strong></p>
+  <p style="margin:4px 0;font-size:0.85em;">= <strong style="font-size:1.2em" id="totalDisplay">—</strong></p>
+</div>
+
+<h2>逐年拆解</h2>
+<table id="detailTable"></table>
+
+<h2>vs 存定期（年化 1.5%）</h2>
+<div class="compare" id="compare"></div>
+
+<div class="card" id="portfolio" style="text-align:center;font-size:0.85em;color:var(--muted);line-height:2">
+  <p style="margin:0">纳指的 8% 伴随着中途 20%–30% 的剧烈波动。</p>
+  <p style="margin:0">存定期的 1.5% 买的是 100% 的确定性。</p>
+  <p style="margin:8px 0 0">理财不是二选一——是把确定性的钱留在防守口袋，把长期闲钱挂在纳指轨道上。</p>
+  <p style="margin:0">这才是能让你<strong style="color:var(--accent)">睡得着觉</strong>的组合。</p>
+</div>
+
+<div class="footer">
+  以上收益率为纳斯达克100指数本身的回报。<br>
+  你买的是国内纳指ETF——实际到手要扣掉管理费+托管费（年均约0.6%–0.8%）+ 交易佣金。<br>
+  以中性情景为例：指数年化8% → 扣除约0.7%费用 → 净收益约7.3%，20年终值从57万变成约53万。<br>
+  乐观/悲观同理各减0.7%。差距存在——但跟存定期1.5%比，结论不变。<br>
+  汇率波动是双向的，未计入。
+</div>
+
+<script>
+const monthlySlider = document.getElementById('monthly');
+const yearsSlider = document.getElementById('years');
+const monthlyDisplay = document.getElementById('monthlyDisplay');
+const yearsDisplay = document.getElementById('yearsDisplay');
+
+function fmt(n) {
+  if (n >= 10000) return '¥' + (n/10000).toFixed(1) + ' 万';
+  return '¥' + n.toLocaleString('zh-CN');
+}
+
+function calc(monthly, years, annualRate) {
+  const months = years * 12;
+  const mr = Math.pow(1 + annualRate, 1/12) - 1;
+  let balance = 0;
+  for (let m = 0; m < months; m++) {
+    balance = (balance + monthly) * (1 + mr);
+  }
+  return balance;
+}
+
+function update() {
+  const monthly = parseInt(monthlySlider.value);
+  const years = parseInt(yearsSlider.value);
+  monthlyDisplay.textContent = fmt(monthly);
+  yearsDisplay.textContent = years + ' 年';
+
+  const totalPrincipal = monthly * years * 12;
+  const pess = calc(monthly, years, 0.05);
+  const neut = calc(monthly, years, 0.08);
+  const opti = calc(monthly, years, 0.13);
+  const fixed = calc(monthly, years, 0.015);
+
+  const marketGift = neut - totalPrincipal;
+  document.getElementById('pessVal').textContent = fmt(Math.round(pess));
+  document.getElementById('neutVal').textContent = fmt(Math.round(neut));
+  document.getElementById('optiVal').textContent = fmt(Math.round(opti));
+
+  // Principal vs market gift breakdown (中性情景)
+  document.getElementById('principalDisplay').textContent = fmt(Math.round(totalPrincipal));
+  document.getElementById('marketGift').textContent = fmt(Math.round(Math.max(0, marketGift)));
+  document.getElementById('totalDisplay').textContent = fmt(Math.round(neut));
+
+  // Detail table: show every 5 years
+  let tableHTML = '<tr><th>年份</th><th>累计本金</th><th>📉 悲观(5%)</th><th>📊 中性(8%)</th><th>📈 乐观(13%)</th></tr>';
+  const milestones = [];
+  for (let y = 5; y <= years; y += 5) milestones.push(y);
+  if (milestones[milestones.length-1] !== years) milestones.push(years);
+
+  for (const y of milestones) {
+    const p = monthly * y * 12;
+    const vp = calc(monthly, y, 0.05);
+    const vn = calc(monthly, y, 0.08);
+    const vo = calc(monthly, y, 0.13);
+    const cls = y === years ? ' class="highlight"' : '';
+    tableHTML += `<tr${cls}><td>第 ${y} 年</td><td>${fmt(Math.round(p))}</td><td>${fmt(Math.round(vp))}</td><td>${fmt(Math.round(vn))}</td><td>${fmt(Math.round(vo))}</td></tr>`;
+  }
+  document.getElementById('detailTable').innerHTML = tableHTML;
+
+  // Compare with fixed deposit
+  const diff = neut - fixed;
+  document.getElementById('compare').innerHTML = `
+    <div class="compare-box fixed">
+      <div class="cp-label">🏦 存定期 · 年化 1.5%</div>
+      <div class="cp-value">${fmt(Math.round(fixed))}</div>
+      <div class="cp-label">本金 ${fmt(Math.round(totalPrincipal))}</div>
+    </div>
+    <div class="compare-box nasdaq">
+      <div class="cp-label">📊 纳指定投 · 中性 8%</div>
+      <div class="cp-value">${fmt(Math.round(neut))}</div>
+      <div class="cp-label">比定期多 <strong>${fmt(Math.round(diff))}</strong></div>
+    </div>
+  `;
+}
+
+// Presets
+document.querySelectorAll('.preset').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.preset').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    monthlySlider.value = btn.dataset.monthly;
+    yearsSlider.value = btn.dataset.years;
+    update();
+  });
+});
+
+monthlySlider.addEventListener('input', update);
+yearsSlider.addEventListener('input', update);
+update();
+</script>
+</body>
+</html>

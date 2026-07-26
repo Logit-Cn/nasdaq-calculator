@@ -68,19 +68,20 @@ tr.highlight td{background:#eaf2f8;font-weight:700}
 <p class="sub">输入你每月打算投的金额，看 5 年、10 年、15 年、20 年后，这笔钱在悲观/中性/乐观三种情景下分别能变成多少。</p>
 
 <div class="card">
-  <div class="controls">
-    <div class="control-group">
-      <label>每月定投金额</label>
-      <div class="val" id="monthlyDisplay">¥1,000</div>
-      <input type="range" id="monthly" min="500" max="10000" step="100" value="1000">
-      <div style="display:flex;justify-content:space-between;font-size:0.68em;color:var(--muted)"><span>¥500</span><span>¥10,000</span></div>
-    </div>
-    <div class="control-group">
-      <label>投资年限</label>
-      <div class="val" id="yearsDisplay">10 年</div>
-      <input type="range" id="years" min="5" max="30" step="1" value="10">
-      <div style="display:flex;justify-content:space-between;font-size:0.68em;color:var(--muted)"><span>5年</span><span>30年</span></div>
-    </div>
+  <p style="font-size:0.8em;color:var(--muted);margin:0 0 12px">我每月打算投</p>
+  <div style="display:flex;align-items:center;gap:10px;margin:0 0 16px;flex-wrap:wrap">
+    <button onclick="adjMonthly(-500)" style="width:44px;height:44px;border:2px solid #ddd;border-radius:10px;background:#fff;font-size:1.3em;cursor:pointer;flex-shrink:0">−</button>
+    <input type="number" id="monthly" value="1000" min="500" max="50000" step="100" onchange="update()" style="flex:1;min-width:120px;height:44px;border:2px solid #ddd;border-radius:10px;text-align:center;font-size:1.2em;font-weight:700;color:var(--accent);font-family:inherit">
+    <button onclick="adjMonthly(500)" style="width:44px;height:44px;border:2px solid #ddd;border-radius:10px;background:#fff;font-size:1.3em;cursor:pointer;flex-shrink:0">+</button>
+    <span style="font-size:0.85em;color:var(--muted);white-space:nowrap">元 / 月</span>
+  </div>
+
+  <p style="font-size:0.8em;color:var(--muted);margin:0 0 12px">坚持定投</p>
+  <div style="display:flex;align-items:center;gap:10px;margin:0 0 16px;flex-wrap:wrap">
+    <button onclick="adjYears(-1)" style="width:44px;height:44px;border:2px solid #ddd;border-radius:10px;background:#fff;font-size:1.3em;cursor:pointer;flex-shrink:0">−</button>
+    <input type="number" id="years" value="10" min="5" max="30" step="1" onchange="update()" style="flex:1;min-width:100px;height:44px;border:2px solid #ddd;border-radius:10px;text-align:center;font-size:1.2em;font-weight:700;color:var(--accent);font-family:inherit">
+    <button onclick="adjYears(1)" style="width:44px;height:44px;border:2px solid #ddd;border-radius:10px;background:#fff;font-size:1.3em;cursor:pointer;flex-shrink:0">+</button>
+    <span style="font-size:0.85em;color:var(--muted);white-space:nowrap">年</span>
   </div>
 
   <div class="presets">
@@ -142,10 +143,17 @@ tr.highlight td{background:#eaf2f8;font-weight:700}
 </div>
 
 <script>
-const monthlySlider = document.getElementById('monthly');
-const yearsSlider = document.getElementById('years');
-const monthlyDisplay = document.getElementById('monthlyDisplay');
-const yearsDisplay = document.getElementById('yearsDisplay');
+const monthlyInput = document.getElementById('monthly');
+const yearsInput = document.getElementById('years');
+
+function adjMonthly(delta) {
+  monthlyInput.value = Math.max(500, Math.min(50000, parseInt(monthlyInput.value) + delta));
+  update();
+}
+function adjYears(delta) {
+  yearsInput.value = Math.max(5, Math.min(30, parseInt(yearsInput.value) + delta));
+  update();
+}
 
 function fmt(n) {
   if (n >= 10000) return '¥' + (n/10000).toFixed(1) + ' 万';
@@ -163,10 +171,8 @@ function calc(monthly, years, annualRate) {
 }
 
 function update() {
-  const monthly = parseInt(monthlySlider.value);
-  const years = parseInt(yearsSlider.value);
-  monthlyDisplay.textContent = fmt(monthly);
-  yearsDisplay.textContent = years + ' 年';
+  const monthly = parseInt(monthlyInput.value);
+  const years = parseInt(yearsInput.value);
 
   const totalPrincipal = monthly * years * 12;
   const pess = calc(monthly, years, 0.05);
@@ -221,14 +227,12 @@ document.querySelectorAll('.preset').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.preset').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    monthlySlider.value = btn.dataset.monthly;
-    yearsSlider.value = btn.dataset.years;
+    monthlyInput.value = btn.dataset.monthly;
+    yearsInput.value = btn.dataset.years;
     update();
   });
 });
 
-monthlySlider.addEventListener('input', update);
-yearsSlider.addEventListener('input', update);
 update();
 </script>
 </body>

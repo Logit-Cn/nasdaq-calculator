@@ -96,29 +96,20 @@ tr.highlight td{background:#eaf2f8;font-weight:700}
 
 <div class="scenarios" id="scenarios">
   <div class="scenario pessimistic">
-    <div class="sc-label">📉 悲观情景</div>
-    <div class="sc-rate">年化 5%</div>
+    <div class="sc-label">📉 悲观情景 · 年化 5%</div>
     <div class="sc-value" id="pessVal">—</div>
-    <div class="sc-detail">历史上最差的20年期<br>纳指也有 ~6%</div>
+    <div class="sc-detail" id="pessDetail">本金 — + 收益 —</div>
   </div>
   <div class="scenario neutral">
-    <div class="sc-label">📊 中性情景</div>
-    <div class="sc-rate">年化 8%</div>
+    <div class="sc-label">📊 中性情景 · 年化 8%</div>
     <div class="sc-value" id="neutVal">—</div>
-    <div class="sc-detail">1985年至今均值<br>最有可能发生的情况</div>
+    <div class="sc-detail" id="neutDetail">本金 — + 收益 —</div>
   </div>
   <div class="scenario optimistic">
-    <div class="sc-label">📈 乐观情景</div>
-    <div class="sc-rate">年化 13%</div>
+    <div class="sc-label">📈 乐观情景 · 年化 13%</div>
     <div class="sc-value" id="optiVal">—</div>
-    <div class="sc-detail">近10年实际年化区间<br>科技持续突破的红利</div>
+    <div class="sc-detail" id="optiDetail">本金 — + 收益 —</div>
   </div>
-</div>
-
-<div class="card" id="breakdown" style="text-align:center;font-size:0.95em;line-height:2.2">
-  <p style="margin:0;color:var(--muted)">这笔钱是怎么来的</p>
-  <p style="margin:4px 0;font-size:0.85em;">你自己存进去的 <strong id="principalDisplay">—</strong> + 全球科技公司帮你赚的 <strong style="color:var(--green)" id="marketGift">—</strong></p>
-  <p style="margin:4px 0;font-size:0.85em;">= <strong style="font-size:1.2em" id="totalDisplay">—</strong></p>
 </div>
 
 <h2>逐年拆解</h2>
@@ -180,15 +171,17 @@ function update() {
   const opti = calc(monthly, years, 0.13);
   const fixed = calc(monthly, years, 0.015);
 
-  const marketGift = neut - totalPrincipal;
   document.getElementById('pessVal').textContent = fmt(Math.round(pess));
   document.getElementById('neutVal').textContent = fmt(Math.round(neut));
   document.getElementById('optiVal').textContent = fmt(Math.round(opti));
 
-  // Principal vs market gift breakdown (中性情景)
-  document.getElementById('principalDisplay').textContent = fmt(Math.round(totalPrincipal));
-  document.getElementById('marketGift').textContent = fmt(Math.round(Math.max(0, marketGift)));
-  document.getElementById('totalDisplay').textContent = fmt(Math.round(neut));
+  // 每张情景卡片：本金 + 收益拆分
+  const pessGain = pess - totalPrincipal;
+  const neutGain = neut - totalPrincipal;
+  const optiGain = opti - totalPrincipal;
+  document.getElementById('pessDetail').innerHTML = '本金 ' + fmt(Math.round(totalPrincipal)) + ' + 收益 <strong>' + fmt(Math.round(Math.max(0, pessGain))) + '</strong>';
+  document.getElementById('neutDetail').innerHTML = '本金 ' + fmt(Math.round(totalPrincipal)) + ' + 收益 <strong>' + fmt(Math.round(Math.max(0, neutGain))) + '</strong>';
+  document.getElementById('optiDetail').innerHTML = '本金 ' + fmt(Math.round(totalPrincipal)) + ' + 收益 <strong>' + fmt(Math.round(Math.max(0, optiGain))) + '</strong>';
 
   // Detail table: show every 5 years
   let tableHTML = '<tr><th>年份</th><th>累计本金</th><th>📉 悲观(5%)</th><th>📊 中性(8%)</th><th>📈 乐观(13%)</th></tr>';
